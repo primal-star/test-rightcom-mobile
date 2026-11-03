@@ -5,6 +5,7 @@ import { spacing } from "@/shared/theme";
 import { CommentItem } from "@/features/posts/components/CommentItem";
 import { PostCard } from "@/features/posts/components/PostCard";
 import { usePostDetail } from "@/features/posts/hooks/usePostDetail";
+import { useDeletePost } from "@/features/posts/hooks/useDeletePost";
 
 export default function PostDetail() {
   const params = useLocalSearchParams<{
@@ -12,6 +13,7 @@ export default function PostDetail() {
   }>();
   const postId = typeof params.postId === "string" ? params.postId : "";
   const detail = usePostDetail(postId);
+  const deletion = useDeletePost(detail.post);
 
   if (detail.loading || !detail.post) {
     return (
@@ -56,6 +58,28 @@ export default function PostDetail() {
               full
             />
 
+            {deletion.canDelete && (
+              <View
+                style={styles.actions}
+              >
+                {deletion.error && (
+                  <AppText
+                    color="error"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {deletion.error}
+                  </AppText>
+                )}
+
+                <Button
+                  label="Supprimer ma publication"
+                  variant="danger"
+                  loading={deletion.isDeleting}
+                  onPress={deletion.confirmDelete}
+                />
+              </View>
+            )}
+
             <AppText
               variant="title"
               accessibilityRole="header"
@@ -83,5 +107,8 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: spacing.lg,
+  },
+  actions: {
+    gap: spacing.sm,
   },
 });

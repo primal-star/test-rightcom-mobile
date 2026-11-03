@@ -1,9 +1,8 @@
-import { Stack, router } from "expo-router";
+import { router } from "expo-router";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { AppText, Button, RequestState, Screen } from "@/shared/components";
 import { spacing } from "@/shared/theme";
 import { useSession } from "@/features/auth/hooks/useSession";
-import { LogoutButton } from "@/features/auth/components/LogoutButton";
 import { PostCard } from "@/features/posts/components/PostCard";
 import { useFeed } from "@/features/posts/hooks/useFeed";
 
@@ -47,19 +46,14 @@ export default function Feed() {
           onPress={() => router.replace("/login")}
         />
       )}
+
     </View>
   );
 
   return (
     <Screen
-      edges={["left", "right", "bottom"]}
+      edges={["left", "right"]}
     >
-      <Stack.Screen
-        options={{
-          headerRight: () => user ? <LogoutButton /> : null,
-        }}
-      />
-
       <FlatList
         data={feed.posts}
         keyExtractor={(post) => post.id}

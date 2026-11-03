@@ -118,8 +118,41 @@ TypeScript, lint et scénarios simulés vérifiés : chargement, erreur et nouve
 tentative, prévention des doubles requêtes, publication introuvable, démontage
 et lecture complète de 205 commentaires. Le test direct de F3 contre le serveur
 et la vérification sur appareil restent à effectuer.
-L’ajout de commentaires et les actions sur les publications ne font pas partie
-de cette étape.
+L’ajout de commentaires sera ajouté dans F5.
+
+## Créer et supprimer une publication (F4)
+
+Les utilisateurs connectés accèdent au formulaire depuis l’onglet « Publier ».
+La route `/publish` renvoie les visiteurs vers la connexion.
+L’ancienne route `/posts/new` redirige vers ce même écran.
+Le formulaire réutilise `FormField` et `useValidatedForm` avec un schéma Yup :
+titre de 3 à 120 caractères et contenu de 1 à 5 000 caractères après `trim()`.
+Les champs sont désactivés pendant la soumission et les erreurs sont affichées.
+Le client transmet uniquement le titre et le contenu ; auteur, compteurs et ACL
+sont attribués par le serveur fourni.
+
+Dans le détail, seul l’auteur voit « Supprimer ma publication ».
+Un `Alert` natif demande confirmation avant `destroy()` ; le serveur conserve
+le contrôle des droits et supprime les commentaires et likes associés.
+Après une mutation réussie, retour au fil et rechargement de sa première page.
+Un retour depuis un détail non modifié conserve la liste et sa position.
+
+Vérifications simulées : limites de validation, nettoyage des espaces, soumission
+unique, refus local des visiteurs, champs envoyés, confirmation et annulation,
+visibilité réservée à l’auteur, erreurs, navigation et invalidation du fil.
+La création/suppression réelle et le dialogue natif restent à vérifier sur appareil.
+
+## Navigation principale
+
+Les routes `/feed` et `/publish` sont regroupées dans un navigateur à deux onglets :
+« Fil » et « Publier », avec icônes et couleurs adaptées au thème.
+Le fil reste accessible sans compte. Toucher « Publier » en tant que visiteur
+ouvre la connexion. La déconnexion reste dans la barre supérieure du fil.
+Le détail d’une publication s’ouvre au-dessus des onglets avec un retour natif.
+
+Le changement d’onglet conserve le brouillon. Publier avec succès ou annuler
+vide le formulaire et revient au fil ; la création recharge sa première page.
+La barre inférieure est masquée pendant la saisie au clavier.
 
 ## Documentation du projet initial
 

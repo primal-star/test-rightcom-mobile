@@ -35,9 +35,9 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
-            name="feed"
+            name="(tabs)"
             options={{
-              title: "Publications",
+              headerShown: false,
             }}
           />
           <Stack.Screen
@@ -51,6 +51,13 @@ export default function RootLayout() {
             name="posts/[postId]"
             options={{
               title: "Publication",
+            }}
+          />
+          <Stack.Screen
+            name="posts/new"
+            options={{
+              title: "Nouvelle publication",
+              headerShown: false,
             }}
           />
           <Stack.Screen

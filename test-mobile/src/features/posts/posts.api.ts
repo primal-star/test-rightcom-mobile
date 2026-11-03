@@ -7,6 +7,7 @@ export type PostSummary = {
   title: string;
   body: string;
   authorUsername: string;
+  authorId: string | null;
   createdAt: Date;
   likesCount: number;
   commentsCount: number;
@@ -25,10 +26,33 @@ function toPostSummary(post: Parse.Object): PostSummary {
     title: post.get("title"),
     body: post.get("body"),
     authorUsername: post.get("author")?.get("username") ?? "Utilisateur supprimé",
+    authorId: post.get("author")?.id ?? null,
     createdAt: post.createdAt!,
     likesCount: post.get("likesCount") ?? 0,
     commentsCount: post.get("commentsCount") ?? 0,
   };
+}
+
+export async function createPost(values: {
+  title: string;
+  body: string;
+}) {
+  const post = new Parse.Object("Post");
+
+  post.set("title", values.title);
+  post.set("body", values.body);
+
+  await post.save();
+
+  return post.id!;
+}
+
+export async function deletePost(postId: string) {
+  const post = new Parse.Object("Post");
+
+  post.id = postId;
+
+  await post.destroy();
 }
 
 export async function fetchPostsPage(offset: number): Promise<PostSummary[]> {

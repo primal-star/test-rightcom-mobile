@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { fetchPostsPage, POSTS_PAGE_SIZE, type PostSummary } from "../posts.api";
+import { getPostsRevision } from "../posts.revision";
 
 type LoadMode = "initial" | "refresh" | "more";
 
@@ -27,6 +29,7 @@ export function useFeed() {
   const inFlight = useRef(false);
   const nextOffset = useRef(0);
   const hasMore = useRef(true);
+  const observedRevision = useRef(getPostsRevision());
 
   const loadPage = useCallback(async (
     mode: LoadMode,
@@ -90,7 +93,7 @@ export function useFeed() {
     };
   }, [loadPage]);
 
-  function refresh() {
+  const refresh = useCallback(() => {
     if (state.phase === "refresh") {
       return;
     }
@@ -106,7 +109,16 @@ export function useFeed() {
     }));
 
     void loadPage("refresh", 0, requestVersion);
-  }
+  }, [loadPage, state.phase]);
+
+  useFocusEffect(useCallback(() => {
+    const currentRevision = getPostsRevision();
+
+    if (currentRevision !== observedRevision.current) {
+      observedRevision.current = currentRevision;
+      refresh();
+    }
+  }, [refresh]));
 
   function loadMore() {
     if (inFlight.current || !hasMore.current || state.error) {

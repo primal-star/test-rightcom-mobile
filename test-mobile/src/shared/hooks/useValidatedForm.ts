@@ -26,6 +26,13 @@ export function useValidatedForm<T extends Record<string, string>>(
     setError(null);
   }
 
+  function reset() {
+    setValues(initialValues);
+    setFieldErrors({
+    });
+    setError(null);
+  }
+
   function handleSubmit(onValid: (validatedValues: T) => Promise<void>) {
     return async () => {
       if (submitting.current) {
@@ -83,6 +90,7 @@ export function useValidatedForm<T extends Record<string, string>>(
     error,
     isSubmitting,
     setField,
+    reset,
     handleSubmit,
   };
 }
