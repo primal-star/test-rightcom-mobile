@@ -2,18 +2,12 @@ import { StyleSheet, View } from "react-native";
 import { AppText } from "@/shared/components";
 import { radii, spacing, useTheme } from "@/shared/theme";
 import type { PostSummary } from "../posts.api";
+import { formatPostDate } from "../utils/formatPostDate";
 
 type PostCardProps = {
   post: PostSummary;
+  full?: boolean;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 export function PostCard(props: PostCardProps) {
   const post = props.post;
@@ -35,7 +29,7 @@ export function PostCard(props: PostCardProps) {
         variant="caption"
         color="muted"
       >
-        {post.authorUsername} · {dateFormatter.format(post.createdAt)}
+        {post.authorUsername} · {formatPostDate(post.createdAt)}
       </AppText>
 
       <AppText
@@ -46,9 +40,10 @@ export function PostCard(props: PostCardProps) {
       </AppText>
 
       <AppText
-        numberOfLines={4}
+        numberOfLines={props.full ? undefined : 4}
+        selectable={props.full}
       >
-        {excerpt}
+        {props.full ? post.body : excerpt}
       </AppText>
 
       <View

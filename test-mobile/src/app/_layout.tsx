@@ -48,6 +48,12 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="posts/[postId]"
+            options={{
+              title: "Publication",
+            }}
+          />
+          <Stack.Screen
             name="signup"
             options={{
               title: "Inscription",

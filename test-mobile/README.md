@@ -100,7 +100,26 @@ Vérification locale : les données fournies ont retourné trois pages de 10, 10
 5 publications via le SDK, avec auteurs, compteurs et ordre décroissant vérifiés.
 Les scénarios simulés couvrent aussi erreurs, nouvelle tentative, fin de liste,
 actualisation concurrente et démontage. Le rendu et les gestes sur appareil
-restent à vérifier. Le détail et les actions J’aime seront ajoutés dans F3 et F6.
+restent à vérifier. Les actions J’aime seront ajoutées dans F6.
+
+## Détail d’une publication (F3)
+
+Une carte du fil ouvre la route `/posts/[postId]` avec uniquement son identifiant.
+L’écran charge la publication complète et ses commentaires depuis Parse,
+avec les auteurs inclus. Les commentaires sont triés par date croissante,
+puis par identifiant, et affichés dans une `FlatList`. La lecture se fait par lots
+de 100 afin de ne pas tronquer la liste à la limite par défaut du SDK.
+
+Le chargement, les erreurs avec nouvelle tentative, l’absence de commentaires
+et une publication introuvable ou inaccessible sont traités. Le bouton natif
+de retour permet de retrouver le fil et sa position.
+
+TypeScript, lint et scénarios simulés vérifiés : chargement, erreur et nouvelle
+tentative, prévention des doubles requêtes, publication introuvable, démontage
+et lecture complète de 205 commentaires. Le test direct de F3 contre le serveur
+et la vérification sur appareil restent à effectuer.
+L’ajout de commentaires et les actions sur les publications ne font pas partie
+de cette étape.
 
 ## Documentation du projet initial
 

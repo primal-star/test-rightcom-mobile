@@ -1,5 +1,5 @@
 import { Stack, router } from "expo-router";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { AppText, Button, RequestState, Screen } from "@/shared/components";
 import { spacing } from "@/shared/theme";
 import { useSession } from "@/features/auth/hooks/useSession";
@@ -64,9 +64,25 @@ export default function Feed() {
         data={feed.posts}
         keyExtractor={(post) => post.id}
         renderItem={({ item }) => (
-          <PostCard
-            post={item}
-          />
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`Lire « ${item.title} » de ${item.authorUsername}`}
+            onPress={() => router.push({
+              pathname: "/posts/[postId]",
+              params: {
+                postId: item.id,
+              },
+            })}
+            style={({ pressed }) => [
+              {
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <PostCard
+              post={item}
+            />
+          </Pressable>
         )}
         ListHeaderComponent={header}
         ListEmptyComponent={
