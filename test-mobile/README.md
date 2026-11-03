@@ -106,7 +106,7 @@ restent à vérifier. Les actions J’aime seront ajoutées dans F6.
 
 Une carte du fil ouvre la route `/posts/[postId]` avec uniquement son identifiant.
 L’écran charge la publication complète et ses commentaires depuis Parse,
-avec les auteurs inclus. Les commentaires sont triés par date croissante,
+avec les auteurs inclus. Les commentaires sont triés par date décroissante,
 puis par identifiant, et affichés dans une `FlatList`. La lecture se fait par lots
 de 100 afin de ne pas tronquer la liste à la limite par défaut du SDK.
 
@@ -118,7 +118,7 @@ TypeScript, lint et scénarios simulés vérifiés : chargement, erreur et nouve
 tentative, prévention des doubles requêtes, publication introuvable, démontage
 et lecture complète de 205 commentaires. Le test direct de F3 contre le serveur
 et la vérification sur appareil restent à effectuer.
-L’ajout de commentaires sera ajouté dans F5.
+L’ajout de commentaires est décrit dans F5 ci-dessous.
 
 ## Créer et supprimer une publication (F4)
 
@@ -153,6 +153,31 @@ Le détail d’une publication s’ouvre au-dessus des onglets avec un retour na
 Le changement d’onglet conserve le brouillon. Publier avec succès ou annuler
 vide le formulaire et revient au fil ; la création recharge sa première page.
 La barre inférieure est masquée pendant la saisie au clavier.
+
+## Ajouter un commentaire (F5)
+
+Le détail contient une zone de saisie fixe sous la liste, avec adaptation au
+clavier et à la hauteur réelle de la barre de navigation.
+Les visiteurs disposent d’un accès à la connexion ; seuls les utilisateurs
+connectés peuvent envoyer un commentaire.
+
+Le formulaire réutilise les wrappers Yup : texte de 1 à 500 caractères après
+suppression des espaces aux extrémités. Une soumission en cours bloque les doubles
+envois et les champs. Le client transmet uniquement le texte et le pointeur vers
+la publication ; le serveur attribue l’auteur et met à jour le compteur.
+
+Après confirmation de l’enregistrement, le commentaire est ajouté à la liste
+locale du plus récent au plus ancien, le compteur du détail est incrémenté et le
+champ est vidé. La liste défile vers le début des commentaires, sous la publication,
+pour afficher le commentaire ajouté. Aucune nouvelle
+lecture du détail n’est nécessaire. Le fil est invalidé pour actualiser son
+compteur au retour sur l’onglet. En cas d’erreur, le brouillon est conservé.
+
+Vérifications simulées : validation et limites, nettoyage, pointeur et champs
+envoyés, passage par le gestionnaire de session, soumission unique, insertion
+sans rechargement, absence de double comptage, ordre des commentaires, remise
+à zéro après succès et conservation du brouillon en cas d’échec.
+L’envoi réel et le comportement du clavier restent à vérifier sur appareil.
 
 ## Documentation du projet initial
 

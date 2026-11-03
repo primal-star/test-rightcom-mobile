@@ -97,9 +97,36 @@ export function usePostDetail(postId: string) {
     void load(++version.current.value);
   }
 
+  function addComment(comment: PostComment) {
+    setState((previous) => {
+      if (
+        previous.post?.id !== postId
+        || previous.comments.some((item) => item.id === comment.id)
+      ) {
+        return previous;
+      }
+
+      const comments = [...previous.comments, comment].sort((first, second) => {
+        const difference = second.createdAt.getTime() - first.createdAt.getTime();
+
+        return difference || second.id.localeCompare(first.id);
+      });
+
+      return {
+        ...previous,
+        comments,
+        post: {
+          ...previous.post,
+          commentsCount: previous.post.commentsCount + 1,
+        },
+      };
+    });
+  }
+
   return {
     ...state,
     loading: state.postId !== postId || state.loading,
     retry,
+    addComment,
   };
 }

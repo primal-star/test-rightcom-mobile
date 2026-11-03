@@ -55,6 +55,26 @@ export async function deletePost(postId: string) {
   await post.destroy();
 }
 
+export async function createComment(
+  postId: string,
+  text: string,
+): Promise<Omit<PostComment, "authorUsername">> {
+  const post = new Parse.Object("Post");
+  const comment = new Parse.Object("Comment");
+
+  post.id = postId;
+  comment.set("post", post);
+  comment.set("text", text);
+
+  await comment.save();
+
+  return {
+    id: comment.id!,
+    text: comment.get("text"),
+    createdAt: comment.createdAt!,
+  };
+}
+
 export async function fetchPostsPage(offset: number): Promise<PostSummary[]> {
   const query = new Parse.Query("Post");
 
@@ -85,8 +105,8 @@ export async function fetchPostDetail(postId: string) {
 
     commentsQuery.equalTo("post", post);
     commentsQuery.include("author");
-    commentsQuery.ascending("createdAt");
-    commentsQuery.addAscending("objectId");
+    commentsQuery.descending("createdAt");
+    commentsQuery.addDescending("objectId");
     commentsQuery.skip(offset);
     commentsQuery.limit(pageSize);
 
