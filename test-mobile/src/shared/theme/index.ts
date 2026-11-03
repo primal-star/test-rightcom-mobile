@@ -11,6 +11,7 @@ export const spacing = {
 export const radii = {
   sm: 8,
   md: 12,
+  pill: 999,
 };
 
 export const typography = {

@@ -1,6 +1,9 @@
+import "@/shared/lib/parse";
+
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/shared/theme";
+import { SessionProvider } from "@/features/auth/session";
 
 export default function RootLayout() {
   const {
@@ -13,24 +16,46 @@ export default function RootLayout() {
       <StatusBar
         style={scheme === "dark" ? "light" : "dark"}
       />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: colors.background,
-          },
-          headerTintColor: colors.text,
-          contentStyle: {
-            backgroundColor: colors.background,
-          },
-        }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            title: "Composants partagés",
+      <SessionProvider>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: colors.background,
+            },
+            headerTintColor: colors.text,
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
           }}
-        />
-      </Stack>
+        >
+          <Stack.Screen
+            name="index"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="feed"
+            options={{
+              title: "Publications",
+            }}
+          />
+          <Stack.Screen
+            name="login"
+            options={{
+              title: "Connexion",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="signup"
+            options={{
+              title: "Inscription",
+              headerShown: false,
+            }}
+          />
+        </Stack>
+      </SessionProvider>
     </>
   );
 }

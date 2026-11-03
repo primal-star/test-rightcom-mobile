@@ -53,9 +53,11 @@ export function Button({
         typeof style === "function" ? style(state) : style,
       ]}
     >
-      {loading && <ActivityIndicator
-        color={color}
-                  />}
+      {loading && (
+        <ActivityIndicator
+          color={color}
+        />
+      )}
       <AppText
         style={{
           color,
@@ -70,10 +72,10 @@ export function Button({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 48,
+    minHeight: 52,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radii.sm,
+    borderRadius: radii.pill,
     flexDirection: "row",
     gap: spacing.sm,
     alignItems: "center",
