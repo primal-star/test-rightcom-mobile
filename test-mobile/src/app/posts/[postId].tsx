@@ -88,15 +88,6 @@ export default function PostDetail() {
                 <View
                   style={styles.actions}
                 >
-                  {deletion.error && (
-                    <AppText
-                      color="error"
-                      accessibilityLiveRegion="polite"
-                    >
-                      {deletion.error}
-                    </AppText>
-                  )}
-
                   <Button
                     label="Supprimer ma publication"
                     variant="danger"

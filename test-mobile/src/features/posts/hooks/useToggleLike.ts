@@ -1,8 +1,11 @@
 import { router, usePathname } from "expo-router";
 import { useRef, useState } from "react";
+import { Alert } from "react-native";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { togglePostLike, type LikeResult } from "../posts.api";
 import { invalidatePosts } from "../posts.revision";
+import { getRequestErrorMessage } from "@/shared/utils/getRequestErrorMessage";
+import { useToast } from "@/shared/hooks/useToast";
 
 export function useToggleLike(
   postId: string,
@@ -13,18 +16,50 @@ export function useToggleLike(
     withSession,
   } = useSession();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const showToast = useToast();
   const pending = useRef(false);
+  const confirming = useRef(false);
   const pathname = usePathname();
 
   async function toggle() {
     if (!user) {
-      router.push({
-        pathname: "/login",
-        params: {
-          returnTo: pathname,
+      if (confirming.current) {
+        return;
+      }
+
+      confirming.current = true;
+
+      Alert.alert(
+        "Connexion requise",
+        "Vous devez être connecté pour aimer une publication.",
+        [
+          {
+            text: "Annuler",
+            style: "cancel",
+            onPress: () => {
+              confirming.current = false;
+            },
+          },
+          {
+            text: "Se connecter",
+            onPress: () => {
+              confirming.current = false;
+              router.push({
+                pathname: "/login",
+                params: {
+                  returnTo: pathname,
+                },
+              });
+            },
+          },
+        ],
+        {
+          cancelable: true,
+          onDismiss: () => {
+            confirming.current = false;
+          },
         },
-      });
+      );
 
       return;
     }
@@ -35,7 +70,6 @@ export function useToggleLike(
 
     pending.current = true;
     setLoading(true);
-    setError(null);
 
     try {
       const result = await withSession(() => togglePostLike(postId));
@@ -43,11 +77,11 @@ export function useToggleLike(
       invalidatePosts();
       onChange(result);
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Impossible de modifier votre mention J’aime.",
-      );
+      const message = getRequestErrorMessage(cause, "Votre mention J’aime n’a pas pu être modifiée. Veuillez réessayer.");
+
+      if (message) {
+        showToast(message);
+      }
     } finally {
       pending.current = false;
       setLoading(false);
@@ -56,7 +90,6 @@ export function useToggleLike(
 
   return {
     loading,
-    error,
     toggle,
   };
 }

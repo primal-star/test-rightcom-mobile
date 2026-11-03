@@ -79,15 +79,6 @@ export function CreatePostScreen() {
             {form.values.body.length} / 5 000 caractères
           </AppText>
 
-          {form.error && (
-            <AppText
-              color="error"
-              accessibilityLiveRegion="polite"
-            >
-              {form.error}
-            </AppText>
-          )}
-
           <Button
             label="Publier"
             loading={form.isSubmitting}

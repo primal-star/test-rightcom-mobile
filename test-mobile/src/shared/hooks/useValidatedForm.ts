@@ -1,18 +1,34 @@
 import { useRef, useState } from "react";
-import { ValidationError, type Schema } from "yup";
+import { reach, ValidationError, type Schema } from "yup";
+import { getRequestErrorMessage } from "@/shared/utils/getRequestErrorMessage";
+import { useToast } from "./useToast";
 
 type FieldErrors<T> = Partial<Record<keyof T, string>>;
 
 export function useValidatedForm<T extends Record<string, string>>(
   schema: Schema<T>,
   initialValues: T,
+  options?: {
+    errorMessage?: string;
+  },
 ) {
   const [values, setValues] = useState(initialValues);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors<T>>({
   });
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitting = useRef(false);
+  const showToast = useToast();
+
+  function isRequired(name: keyof T) {
+    const field = reach(schema, String(name), values);
+    const description = field.describe({
+      value: values[name],
+      parent: values,
+    });
+
+    return "tests" in description
+      && description.tests.some((test) => test.name === "required");
+  }
 
   function setField(name: keyof T, value: string) {
     setValues((previous) => ({
@@ -23,14 +39,12 @@ export function useValidatedForm<T extends Record<string, string>>(
       ...previous,
       [name]: undefined,
     }));
-    setError(null);
   }
 
   function reset() {
     setValues(initialValues);
     setFieldErrors({
     });
-    setError(null);
   }
 
   function handleSubmit(onValid: (validatedValues: T) => Promise<void>) {
@@ -43,7 +57,6 @@ export function useValidatedForm<T extends Record<string, string>>(
       setIsSubmitting(true);
       setFieldErrors({
       });
-      setError(null);
 
       try {
         const validatedValues = await schema.validate(values, {
@@ -68,14 +81,14 @@ export function useValidatedForm<T extends Record<string, string>>(
           setFieldErrors(errors);
 
           if (!Object.keys(errors).length) {
-            setError(cause.message);
+            showToast("Vérifiez les informations du formulaire puis réessayez.");
           }
         } else {
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "Une erreur est survenue. Veuillez réessayer.",
-          );
+          const message = getRequestErrorMessage(cause, options?.errorMessage);
+
+          if (message) {
+            showToast(message);
+          }
         }
       } finally {
         submitting.current = false;
@@ -87,10 +100,10 @@ export function useValidatedForm<T extends Record<string, string>>(
   return {
     values,
     fieldErrors,
-    error,
     isSubmitting,
     setField,
     reset,
+    isRequired,
     handleSubmit,
   };
 }

@@ -8,9 +8,13 @@ import {
 import { Parse } from "@/shared/lib/parse";
 import { RequestState, Screen } from "@/shared/components";
 import { SessionContext } from "./contexts/SessionContext";
+import { getRequestErrorMessage } from "@/shared/utils/getRequestErrorMessage";
+import { usePathname } from "expo-router";
+import { useToast } from "@/shared/hooks/useToast";
+import { isPublicPage } from "./utils/isPublicPage";
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Une erreur de session est survenue.";
+  return getRequestErrorMessage(error, "Une erreur de session est survenue.");
 }
 
 export function SessionProvider(props: PropsWithChildren) {
@@ -20,6 +24,17 @@ export function SessionProvider(props: PropsWithChildren) {
   const [error, setError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const signOutPromise = useRef<Promise<void> | null>(null);
+  const pathname = usePathname();
+  const currentPath = useRef(pathname);
+  const showToast = useToast();
+  const expiration = useRef<{
+    token: string;
+    promise: Promise<boolean>;
+  } | null>(null);
+
+  useEffect(() => {
+    currentPath.current = pathname;
+  }, [pathname]);
 
   const refreshSession = useCallback(async () => {
     const currentUser = await Parse.User.currentAsync();
@@ -97,6 +112,36 @@ export function SessionProvider(props: PropsWithChildren) {
     return pending;
   }, []);
 
+  const expireSession = useCallback((token: string) => {
+    if (expiration.current?.token === token) {
+      return expiration.current.promise;
+    }
+
+    const publicPage = isPublicPage(currentPath.current);
+
+    const promise = (async () => {
+      await signOut();
+
+      if (publicPage) {
+        setError(null);
+        showToast("Votre session a expiré. Vous avez été déconnecté");
+
+        return true;
+      }
+
+      setError("Votre session a expiré. Veuillez vous reconnecter.");
+
+      return false;
+    })();
+
+    expiration.current = {
+      token,
+      promise,
+    };
+
+    return promise;
+  }, [showToast, signOut]);
+
   const withSession = useCallback(async <T,>(request: () => Promise<T>): Promise<T> => {
     const currentUser = await Parse.User.currentAsync();
     const sessionToken = currentUser?.getSessionToken();
@@ -108,15 +153,23 @@ export function SessionProvider(props: PropsWithChildren) {
         const latestUser = await Parse.User.currentAsync();
 
         // Ignore an old request if another user has since signed in.
-        if (sessionToken && latestUser?.getSessionToken() === sessionToken) {
-          await signOut();
-          setError("Votre session a expiré. Veuillez vous reconnecter.");
+        if (sessionToken && (
+          latestUser?.getSessionToken() === sessionToken
+          || expiration.current?.token === sessionToken
+        )) {
+          const notified = await expireSession(sessionToken);
+
+          if (notified) {
+            Object.assign(cause, {
+              notificationHandled: true,
+            });
+          }
         }
       }
 
       throw cause;
     }
-  }, [signOut]);
+  }, [expireSession]);
 
   if (isRestoring || restoreError) {
     return (

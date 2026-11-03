@@ -90,7 +90,7 @@ export function AuthScreen(props: AuthScreenProps) {
               <FormField
                 form={form}
                 name="email"
-                label="Adresse e-mail (facultative)"
+                label="Adresse e-mail"
                 placeholder="vous@exemple.fr"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -111,15 +111,6 @@ export function AuthScreen(props: AuthScreenProps) {
               returnKeyType="done"
               onSubmitEditing={() => void form.submit()}
             />
-
-            {form.error && (
-              <AppText
-                color="error"
-                accessibilityLiveRegion="polite"
-              >
-                {form.error}
-              </AppText>
-            )}
 
             <Button
               label={isSignup ? "Créer mon compte" : "Se connecter"}

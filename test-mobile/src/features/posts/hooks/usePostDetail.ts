@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Parse } from "@/shared/lib/parse";
+import { getRequestErrorMessage } from "@/shared/utils/getRequestErrorMessage";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { fetchPostDetail, type LikeResult, type PostComment, type PostSummary } from "../posts.api";
 
@@ -64,9 +65,7 @@ export function usePostDetail(postId: string) {
           loading: false,
           error: notFound
             ? "Cette publication n’existe plus ou n’est pas accessible."
-            : cause instanceof Error
-              ? cause.message
-              : "Impossible de charger la publication.",
+            : getRequestErrorMessage(cause, "Impossible de charger la publication."),
           notFound,
         });
       }

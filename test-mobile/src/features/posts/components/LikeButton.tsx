@@ -68,15 +68,6 @@ export function LikeButton({
         </AppText>
       </Pressable>
 
-      {action.error && (
-        <AppText
-          variant="caption"
-          color="error"
-          accessibilityLiveRegion="polite"
-        >
-          {action.error}
-        </AppText>
-      )}
     </View>
   );
 }

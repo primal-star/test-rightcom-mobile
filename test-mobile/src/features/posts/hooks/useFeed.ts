@@ -3,6 +3,7 @@ import { useFocusEffect } from "expo-router";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { fetchPostsPage, POSTS_PAGE_SIZE, type LikeResult, type PostSummary } from "../posts.api";
 import { getPostsRevision } from "../posts.revision";
+import { getRequestErrorMessage } from "@/shared/utils/getRequestErrorMessage";
 
 type LoadMode = "initial" | "refresh" | "more";
 
@@ -33,6 +34,7 @@ export function useFeed() {
     value: 0,
   });
   const inFlight = useRef(false);
+  const activeMode = useRef<LoadMode | null>("initial");
   const nextOffset = useRef(0);
   const hasMore = useRef(true);
   const observedRevision = useRef(getPostsRevision());
@@ -76,15 +78,14 @@ export function useFeed() {
           userId,
           posts: previous.userId === userId ? previous.posts : [],
           phase: null,
-          error: cause instanceof Error
-            ? cause.message
-            : "Impossible de charger les publications.",
+          error: getRequestErrorMessage(cause, "Impossible de charger les publications."),
           errorMode: mode,
         }));
       }
     } finally {
       if (version.current.value === requestVersion) {
         inFlight.current = false;
+        activeMode.current = null;
       }
     }
   }, [user, userId, withSession]);
@@ -94,22 +95,25 @@ export function useFeed() {
     const requestVersion = ++version.current.value;
 
     inFlight.current = true;
+    activeMode.current = "initial";
     void loadPage("initial", 0, requestVersion);
 
     return () => {
       currentVersion.value++;
       inFlight.current = false;
+      activeMode.current = null;
     };
   }, [loadPage]);
 
   const refresh = useCallback(() => {
-    if (state.phase === "refresh") {
+    if (activeMode.current === "refresh") {
       return;
     }
 
     const requestVersion = ++version.current.value;
 
     inFlight.current = true;
+    activeMode.current = "refresh";
     setState((previous) => ({
       ...previous,
       phase: "refresh",
@@ -118,7 +122,7 @@ export function useFeed() {
     }));
 
     void loadPage("refresh", 0, requestVersion);
-  }, [loadPage, state.phase]);
+  }, [loadPage]);
 
   useFocusEffect(useCallback(() => {
     const currentRevision = getPostsRevision();
@@ -137,6 +141,7 @@ export function useFeed() {
     const requestVersion = ++version.current.value;
 
     inFlight.current = true;
+    activeMode.current = "more";
     setState((previous) => ({
       ...previous,
       phase: "more",
@@ -155,6 +160,7 @@ export function useFeed() {
     const requestVersion = ++version.current.value;
 
     inFlight.current = true;
+    activeMode.current = mode;
     setState((previous) => ({
       ...previous,
       phase: mode,

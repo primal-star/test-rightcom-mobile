@@ -35,15 +35,20 @@ export function RequestState({
       {...props}
       style={[styles.container, style]}
     >
-      {status === "loading" && <ActivityIndicator
-        color={colors.primary}
-                               />}
+      {status === "loading" && (
+        <ActivityIndicator
+          color={colors.primary}
+          accessibilityLabel={message ?? messages.loading}
+        />
+      )}
+
       <AppText
         color={status === "error" ? "error" : "muted"}
         style={styles.message}
       >
         {message ?? messages[status]}
       </AppText>
+
       {status === "error" && onRetry && (
         <Button
           label="Réessayer"

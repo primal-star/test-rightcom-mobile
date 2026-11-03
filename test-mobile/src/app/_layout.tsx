@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/shared/theme";
 import { SessionProvider } from "@/features/auth/session";
 import { SessionHeaderAction } from "@/features/auth/components/SessionHeaderAction";
+import { ToastProvider } from "@/shared/components/ToastProvider";
 
 export default function RootLayout() {
   const {
@@ -17,60 +18,62 @@ export default function RootLayout() {
       <StatusBar
         style={scheme === "dark" ? "light" : "dark"}
       />
-      <SessionProvider>
-        <Stack
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: colors.background,
-            },
-            headerTintColor: colors.text,
-            headerRight: () => <SessionHeaderAction />,
-            contentStyle: {
-              backgroundColor: colors.background,
-            },
-          }}
-        >
-          <Stack.Screen
-            name="index"
-            options={{
-              headerShown: false,
+      <ToastProvider>
+        <SessionProvider>
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: colors.background,
+              },
+              headerTintColor: colors.text,
+              headerRight: () => <SessionHeaderAction />,
+              contentStyle: {
+                backgroundColor: colors.background,
+              },
             }}
-          />
-          <Stack.Screen
-            name="(tabs)"
-            options={{
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="login"
-            options={{
-              title: "Connexion",
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="posts/[postId]"
-            options={{
-              title: "Publication",
-            }}
-          />
-          <Stack.Screen
-            name="posts/new"
-            options={{
-              title: "Nouvelle publication",
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="signup"
-            options={{
-              title: "Inscription",
-              headerShown: false,
-            }}
-          />
-        </Stack>
-      </SessionProvider>
+          >
+            <Stack.Screen
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="login"
+              options={{
+                title: "Connexion",
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="posts/[postId]"
+              options={{
+                title: "Publication",
+              }}
+            />
+            <Stack.Screen
+              name="posts/new"
+              options={{
+                title: "Nouvelle publication",
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="signup"
+              options={{
+                title: "Inscription",
+                headerShown: false,
+              }}
+            />
+          </Stack>
+        </SessionProvider>
+      </ToastProvider>
     </>
   );
 }

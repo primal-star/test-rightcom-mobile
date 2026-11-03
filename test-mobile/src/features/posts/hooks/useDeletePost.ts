@@ -4,6 +4,8 @@ import { Alert } from "react-native";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { deletePost, type PostSummary } from "../posts.api";
 import { invalidatePosts } from "../posts.revision";
+import { getRequestErrorMessage } from "@/shared/utils/getRequestErrorMessage";
+import { useToast } from "@/shared/hooks/useToast";
 
 export function useDeletePost(post: PostSummary | null) {
   const {
@@ -11,7 +13,7 @@ export function useDeletePost(post: PostSummary | null) {
     withSession,
   } = useSession();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const showToast = useToast();
   const deleting = useRef(false);
   const confirming = useRef(false);
   const canDelete = Boolean(user && post && user.id === post.authorId);
@@ -25,14 +27,17 @@ export function useDeletePost(post: PostSummary | null) {
 
     deleting.current = true;
     setIsDeleting(true);
-    setError(null);
 
     try {
       await withSession(() => deletePost(post.id));
       invalidatePosts();
       router.dismissTo("/feed");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "La suppression a échoué.");
+      const message = getRequestErrorMessage(cause, "La publication n’a pas pu être supprimée. Veuillez réessayer.");
+
+      if (message) {
+        showToast(message);
+      }
     } finally {
       deleting.current = false;
       setIsDeleting(false);
@@ -75,7 +80,6 @@ export function useDeletePost(post: PostSummary | null) {
   return {
     canDelete,
     isDeleting,
-    error,
     confirmDelete,
   };
 }

@@ -13,6 +13,8 @@ export function useCreatePost() {
   const form = useValidatedForm(postSchema, {
     title: "",
     body: "",
+  }, {
+    errorMessage: "Votre publication n’a pas pu être envoyée. Veuillez réessayer.",
   });
 
   const submit = form.handleSubmit(async (values) => {

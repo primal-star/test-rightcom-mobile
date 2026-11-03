@@ -46,16 +46,6 @@ export function CommentComposer({
             {form.values.text.length} / 500 caractères
           </AppText>
 
-          {form.error && (
-            <AppText
-              color="error"
-              variant="caption"
-              accessibilityLiveRegion="polite"
-            >
-              {form.error}
-            </AppText>
-          )}
-
           <Button
             label="Envoyer"
             loading={form.isSubmitting}

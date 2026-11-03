@@ -1,5 +1,10 @@
 # Blog mobile — Expo et Parse
 
+Plateforme testée : **Android avec Expo Go**. Le 3 novembre 2026, l’utilisateur
+a confirmé avoir testé les parcours sur son téléphone : connexion, publication,
+suppression, commentaire et J’aime. Les contrôles de code et les vérifications
+simulées sont distincts de cette validation sur appareil.
+
 ## Backend Parse local
 
 Depuis le dossier parent, démarrer le serveur fourni :
@@ -55,6 +60,9 @@ soumissions. Les règles propres à l’authentification sont dans `auth.schemas
 `FormField` relie un champ nommé à sa valeur, son erreur et son état désactivé :
 il n’est plus nécessaire de répéter ce branchement dans chaque écran.
 La validation est déclenchée à la soumission ; modifier un champ efface son erreur.
+Les champs obligatoires sont identifiés automatiquement depuis les règles
+`required()` du schéma Yup et affichent une étoile rouge après leur libellé.
+Les champs facultatifs n’ont ni étoile ni mention supplémentaire.
 
 Le style commun est porté par les primitives : boutons arrondis, champs sur fond
 discret, bordure au focus ou en erreur, et affichage/masquage des mots de passe.
@@ -99,8 +107,8 @@ de réessayer sans avancer la pagination.
 Vérification locale : les données fournies ont retourné trois pages de 10, 10 et
 5 publications via le SDK, avec auteurs, compteurs et ordre décroissant vérifiés.
 Les scénarios simulés couvrent aussi erreurs, nouvelle tentative, fin de liste,
-actualisation concurrente et démontage. Le rendu et les gestes sur appareil
-restent à vérifier. Les actions J’aime sont disponibles dans F6.
+actualisation concurrente et démontage. La validation sur Android est précisée
+dans F7. Les actions J’aime sont disponibles dans F6.
 
 ## Détail d’une publication (F3)
 
@@ -118,8 +126,8 @@ de retour permet de retrouver le fil et sa position.
 
 TypeScript, lint et scénarios simulés vérifiés : chargement, erreur et nouvelle
 tentative, prévention des doubles requêtes, publication introuvable, démontage
-et lecture complète de 205 commentaires. Le test direct de F3 contre le serveur
-et la vérification sur appareil restent à effectuer.
+et lecture complète de 205 commentaires. La validation sur Android est précisée
+dans F7.
 L’ajout de commentaires est décrit dans F5 ci-dessous.
 
 ## Créer et supprimer une publication (F4)
@@ -142,7 +150,7 @@ Un retour depuis un détail non modifié conserve la liste et sa position.
 Vérifications simulées : limites de validation, nettoyage des espaces, soumission
 unique, refus local des visiteurs, champs envoyés, confirmation et annulation,
 visibilité réservée à l’auteur, erreurs, navigation et invalidation du fil.
-La création/suppression réelle et le dialogue natif restent à vérifier sur appareil.
+La validation des parcours sur Android est précisée dans F7.
 
 ## Navigation principale
 
@@ -181,7 +189,7 @@ Vérifications simulées : validation et limites, nettoyage, pointeur et champs
 envoyés, passage par le gestionnaire de session, soumission unique, insertion
 sans rechargement, absence de double comptage, ordre des commentaires, remise
 à zéro après succès et conservation du brouillon en cas d’échec.
-L’envoi réel et le comportement du clavier restent à vérifier sur appareil.
+La validation des parcours sur Android est précisée dans F7.
 
 ## Mentions J’aime (F6)
 
@@ -199,11 +207,12 @@ Toutes les mutations utilisent `Parse.Cloud.run("toggleLike", { postId })`.
 Le compteur et l’état personnel sont mis à jour avec la réponse serveur.
 Le client ne crée ni ne supprime directement un objet `Like`.
 Une modification dans le détail invalide le fil, qui se synchronise au retour.
-Une erreur conserve l’état précédent et reste affichée près du bouton.
+Une erreur conserve l’état précédent et est annoncée dans un toast.
 
 Le fil et le détail sont publics. Publier, commenter et aimer exigent une connexion.
 La suppression exige en plus d’être l’auteur. Un visiteur qui touche J’aime
-est dirigé vers la connexion puis revient à la page concernée,
+voit une confirmation « Connexion requise » avec « Se connecter » et « Annuler ».
+Seule la confirmation ouvre la connexion, puis revient à la page concernée,
 sans rejouer automatiquement l’action initiale.
 
 La destination est conservée lors du passage connexion/inscription et limitée
@@ -214,62 +223,63 @@ une demande d’accès à Publier ne permet pas de contourner la connexion.
 Vérifications simulées : lecture groupée des mentions personnelles, omission de
 la requête pour les visiteurs, ajout/retrait, compteurs issus du serveur,
 soumission unique, erreurs sans changement visuel des données, mise à jour
-du fil et du détail et redirection vers la connexion. Les appels réels de
-F6 et le rendu sur appareil restent à vérifier.
+du fil et du détail et redirection vers la connexion. La validation des parcours
+sur Android est précisée dans F7.
 
-## Documentation du projet initial
+## Qualité de l’expérience (F7)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Les lectures gèrent le chargement, les listes vides, les erreurs et les nouvelles
+tentatives. Une erreur de pagination ou d’actualisation conserve les publications
+visibles. Les requêtes concurrentes d’actualisation sont bloquées et les réponses
+périmées sont ignorées.
 
-## Get started
+Les formulaires désactivent leurs champs et boutons pendant l’envoi. Un échec
+conserve le brouillon. Les actions J’aime, suppression et déconnexion ont aussi
+un état d’attente et une protection contre les appels répétés.
+Les messages courants de réseau, délai, session expirée et compte déjà utilisé
+sont présentés en français. Les erreurs inconnues utilisent un message général
+adapté à l’action ; les réponses techniques brutes ne sont pas présentées.
+Les identifiants incorrects affichent un message explicite.
+Les erreurs disposent d’un rôle d’alerte et d’une annonce accessible.
 
-1. Install dependencies
+Les erreurs API de connexion, inscription, publication, commentaire, J’aime
+et suppression s’affichent en toast, sans doublon dans le formulaire.
+Les erreurs de validation Yup restent sous le champ concerné.
+Les erreurs de chargement du fil ou du détail conservent leur bloc avec
+« Réessayer ». Chaque nouveau toast reste visible quatre secondes, même si
+son texte est identique au précédent.
 
-   ```bash
-   npm install
-   ```
+Lorsqu’une session expire sur une page publique, l’utilisateur est déconnecté
+et un toast affiche « Votre session a expiré. Vous avez été déconnecté » pendant
+quatre secondes. Il peut continuer à consulter la page en tant que visiteur.
+L’incident est annoncé une seule fois même si plusieurs requêtes échouent ensemble,
+et le message ne se répète pas dans les erreurs locales. L’écran protégé
+« Publier » conserve son contrôle d’accès et le message de reconnexion.
 
-2. Start the app
+### Validation
 
-   ```bash
-   npx expo start
-   ```
+- Parcours nominaux : testés sur Android par l’utilisateur, confirmation du 3 novembre 2026.
+- TypeScript : `npx tsc --noEmit`.
+- Lint : `npx expo lint`.
+- Vérifications simulées ponctuelles : session, accès public/authentifié, formulaires,
+  pagination, erreurs/retry, concurrence, compteurs, J’aime et messages utilisateur.
+- Assemblage JavaScript Android vérifié lors de la mise en place des onglets ;
+  cela ne constitue pas une validation d’un APK de production.
 
-In the output, you'll find options to open the app in a
+Aucune validation iOS ni campagne exhaustive sur les tailles de police,
+TalkBack, réseau dégradé et expirations de session n’est documentée.
+Les nouvelles traductions et annonces accessibles de F7 ont été vérifiées
+par contrôles de code/simulation ; leur rendu final sur téléphone reste à confirmer.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Limites et améliorations
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Le MUST est implémenté. Les bonus (édition, suppression de ses commentaires,
+LiveQuery, J’aime optimiste et tests de composants) ne sont pas ajoutés.
+Les vérifications simulées ponctuelles ne remplacent pas une suite de tests
+versionnée ; une telle suite serait une prochaine amélioration.
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Le serveur fourni est un environnement de développement : les données sont
+réinitialisées au redémarrage sans base persistante configurée.
+L’application ne propose pas de mode hors ligne ni de récupération de mot de passe.
+Pour une suite au test : tests de composants et d’intégration reproductibles,
+validation iOS et accessibilité, puis pagination des commentaires au défilement.

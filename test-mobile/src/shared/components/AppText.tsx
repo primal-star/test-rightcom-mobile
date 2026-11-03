@@ -10,6 +10,8 @@ export function AppText({
   variant = "body",
   color = "default",
   style,
+  accessibilityRole,
+  accessibilityLiveRegion,
   ...props
 }: AppTextProps) {
   const { colors } = useTheme();
@@ -19,9 +21,12 @@ export function AppText({
       : color === "muted"
         ? colors.muted
         : colors.text;
+
   return (
     <Text
       {...props}
+      accessibilityRole={accessibilityRole ?? (color === "error" ? "alert" : undefined)}
+      accessibilityLiveRegion={accessibilityLiveRegion ?? (color === "error" ? "polite" : undefined)}
       style={[
         typography[variant],
         {

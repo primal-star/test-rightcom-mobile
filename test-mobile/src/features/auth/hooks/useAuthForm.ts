@@ -2,6 +2,7 @@ import { Parse } from "@/shared/lib/parse";
 import { useValidatedForm } from "@/shared/hooks/useValidatedForm";
 import { loginSchema, signupSchema } from "../auth.schemas";
 import { useSession } from "./useSession";
+import { UserFacingError } from "@/shared/utils/UserFacingError";
 
 export type AuthMode = "login" | "signup";
 
@@ -12,6 +13,10 @@ export function useAuthForm(mode: AuthMode) {
     username: "",
     password: "",
     email: "",
+  }, {
+    errorMessage: mode === "login"
+      ? "La connexion n’a pas abouti. Veuillez réessayer."
+      : "Votre compte n’a pas pu être créé. Veuillez réessayer.",
   });
 
   const submit = form.handleSubmit(async (values) => {
@@ -27,9 +32,17 @@ export function useAuthForm(mode: AuthMode) {
 
       await account.signUp();
     } else {
-      await Parse.User.logIn(values.username, values.password, {
-        usePost: true,
-      });
+      try {
+        await Parse.User.logIn(values.username, values.password, {
+          usePost: true,
+        });
+      } catch (cause) {
+        if (cause instanceof Parse.Error && cause.code === Parse.Error.OBJECT_NOT_FOUND) {
+          throw new UserFacingError("Le nom d’utilisateur ou le mot de passe est incorrect.");
+        }
+
+        throw cause;
+      }
     }
 
     await refreshSession();

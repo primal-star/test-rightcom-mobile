@@ -14,12 +14,14 @@ import { AppText } from "./AppText";
 export type TextFieldProps = TextInputProps & {
   label: string;
   error?: string;
+  required?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
 };
 
 export function TextField({
   label,
   error,
+  required = false,
   containerStyle,
   style,
   multiline,
@@ -45,6 +47,17 @@ export function TextField({
         style={styles.label}
       >
         {label}
+        {required && (
+          <AppText
+            variant="caption"
+            accessible={false}
+            style={{
+              color: colors.danger,
+            }}
+          >
+            {" *"}
+          </AppText>
+        )}
       </AppText>
 
       <View
@@ -65,7 +78,7 @@ export function TextField({
           multiline={multiline}
           editable={editable}
           secureTextEntry={hasPasswordToggle ? !passwordVisible : secureTextEntry}
-          accessibilityLabel={accessibilityLabel ?? label}
+          accessibilityLabel={accessibilityLabel ?? `${label}${required ? ", obligatoire" : ""}`}
           accessibilityHint={
             [accessibilityHint, error].filter(Boolean).join(". ") || undefined
           }

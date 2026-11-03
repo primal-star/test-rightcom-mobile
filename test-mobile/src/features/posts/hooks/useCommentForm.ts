@@ -14,6 +14,8 @@ export function useCommentForm(
   } = useSession();
   const form = useValidatedForm(commentSchema, {
     text: "",
+  }, {
+    errorMessage: "Votre commentaire n’a pas pu être envoyé. Veuillez réessayer.",
   });
 
   const submit = form.handleSubmit(async (values) => {
