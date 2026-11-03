@@ -38,7 +38,7 @@ Le nom d’utilisateur et le mot de passe sont requis ; l’adresse e-mail est f
 et doit être valide si elle est renseignée. Le mot de passe est transmis tel que saisi.
 Les erreurs serveur sont affichées et les champs/actions sont désactivés pendant
 la soumission. Après succès, la session est synchronisée et l’application revient
-au fil de publications (écran d’attente tant que F2 n’est pas implémentée).
+au fil de publications.
 Au lancement, les visiteurs arrivent sur la connexion ; une session restaurée
 ouvre directement le fil. La lecture sans connexion reste accessible depuis
 le bouton « Continuer sans connexion ». La démonstration des primitives est retirée.
@@ -85,6 +85,22 @@ Après l’ajout de cette configuration Metro, redémarrer Expo :
 ```sh
 npx expo start --clear
 ```
+
+## Fil de publications (F2)
+
+Le fil utilise une `FlatList` et uniquement le SDK Parse : inclusion de l’auteur,
+tri décroissant sur `createdAt` puis `objectId`, pages de dix avec `skip/limit`.
+Chaque carte affiche titre, auteur, date en français, extrait, likes et commentaires.
+Le défilement charge la suite et le glissement vers le bas recharge la première page.
+Les doublons sont éliminés par identifiant ; une réponse antérieure à une
+actualisation est ignorée. Une erreur conserve les éléments visibles et permet
+de réessayer sans avancer la pagination.
+
+Vérification locale : les données fournies ont retourné trois pages de 10, 10 et
+5 publications via le SDK, avec auteurs, compteurs et ordre décroissant vérifiés.
+Les scénarios simulés couvrent aussi erreurs, nouvelle tentative, fin de liste,
+actualisation concurrente et démontage. Le rendu et les gestes sur appareil
+restent à vérifier. Le détail et les actions J’aime seront ajoutés dans F3 et F6.
 
 ## Documentation du projet initial
 
