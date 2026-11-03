@@ -1,4 +1,5 @@
-import { Redirect, router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -11,6 +12,7 @@ import { AppText, Button, FormField, Screen } from "@/shared/components";
 import { spacing, useTheme } from "@/shared/theme";
 import { useAuthForm, type AuthMode } from "../hooks/useAuthForm";
 import { useSession } from "../hooks/useSession";
+import { resolveAuthReturnTo } from "../utils/authReturnTo";
 
 type AuthScreenProps = {
   mode: AuthMode;
@@ -22,13 +24,22 @@ export function AuthScreen(props: AuthScreenProps) {
   const colors = useTheme().colors;
   const form = useAuthForm(mode);
   const isSignup = mode === "signup";
+  const params = useLocalSearchParams<{
+    returnTo?: string;
+  }>();
+  const target = useMemo(
+    () => resolveAuthReturnTo(params.returnTo),
+    [params.returnTo],
+  );
+
+  useEffect(() => {
+    if (user) {
+      router.dismissTo(target.href);
+    }
+  }, [user, target]);
 
   if (user) {
-    return (
-      <Redirect
-        href="/feed"
-      />
-    );
+    return null;
   }
 
   return (
@@ -134,7 +145,12 @@ export function AuthScreen(props: AuthScreenProps) {
                 disabled: form.isSubmitting,
               }}
               disabled={form.isSubmitting}
-              onPress={() => router.replace(isSignup ? "/login" : "/signup")}
+              onPress={() => router.replace({
+                pathname: isSignup ? "/login" : "/signup",
+                params: {
+                  returnTo: target.path,
+                },
+              })}
               style={styles.link}
             >
               <AppText
@@ -157,7 +173,7 @@ export function AuthScreen(props: AuthScreenProps) {
               disabled: form.isSubmitting,
             }}
             disabled={form.isSubmitting}
-            onPress={() => router.replace("/feed")}
+            onPress={() => router.dismissTo(target.path === "/publish" ? "/feed" : target.href)}
             style={styles.guestLink}
           >
             <AppText

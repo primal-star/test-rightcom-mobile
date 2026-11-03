@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useSession } from "@/features/auth/hooks/useSession";
-import { fetchPostsPage, POSTS_PAGE_SIZE, type PostSummary } from "../posts.api";
+import { fetchPostsPage, POSTS_PAGE_SIZE, type LikeResult, type PostSummary } from "../posts.api";
 import { getPostsRevision } from "../posts.revision";
 
 type LoadMode = "initial" | "refresh" | "more";
 
 type FeedState = {
+  userId: string | null;
   posts: PostSummary[];
   phase: LoadMode | null;
   error: string | null;
@@ -15,8 +16,13 @@ type FeedState = {
 };
 
 export function useFeed() {
-  const withSession = useSession().withSession;
+  const {
+    user,
+    withSession,
+  } = useSession();
+  const userId = user?.id ?? null;
   const [state, setState] = useState<FeedState>({
+    userId,
     posts: [],
     phase: "initial",
     error: null,
@@ -37,7 +43,7 @@ export function useFeed() {
     requestVersion: number,
   ) => {
     try {
-      const page = await withSession(() => fetchPostsPage(offset));
+      const page = await withSession(() => fetchPostsPage(offset, user));
 
       if (version.current.value !== requestVersion) {
         return;
@@ -55,6 +61,7 @@ export function useFeed() {
         ).values());
 
         return {
+          userId,
           posts: uniquePosts,
           phase: null,
           error: null,
@@ -66,6 +73,8 @@ export function useFeed() {
       if (version.current.value === requestVersion) {
         setState((previous) => ({
           ...previous,
+          userId,
+          posts: previous.userId === userId ? previous.posts : [],
           phase: null,
           error: cause instanceof Error
             ? cause.message
@@ -78,7 +87,7 @@ export function useFeed() {
         inFlight.current = false;
       }
     }
-  }, [withSession]);
+  }, [user, userId, withSession]);
 
   useEffect(() => {
     const currentVersion = version.current;
@@ -156,10 +165,29 @@ export function useFeed() {
     void loadPage(mode, offset, requestVersion);
   }
 
+  function updateLike(postId: string, result: LikeResult) {
+    observedRevision.current = getPostsRevision();
+
+    setState((previous) => ({
+      ...previous,
+      posts: previous.userId === userId ? previous.posts.map((post) => (
+        post.id === postId ? {
+          ...post,
+          likedByMe: result.liked,
+          likesCount: result.likesCount,
+        } : post
+      )) : previous.posts,
+    }));
+  }
+
   return {
     ...state,
+    posts: state.userId === userId ? state.posts : [],
+    phase: state.userId === userId ? state.phase : "initial" as const,
+    error: state.userId === userId ? state.error : null,
     refresh,
     loadMore,
     retry,
+    updateLike,
   };
 }

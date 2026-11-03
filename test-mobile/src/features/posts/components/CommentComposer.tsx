@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { AppText, Button, FormField } from "@/shared/components";
 import { spacing, useTheme } from "@/shared/theme";
@@ -14,6 +14,7 @@ export function CommentComposer({
   disabled = false,
 }: CommentComposerProps) {
   const colors = useTheme().colors;
+  const pathname = usePathname();
 
   return (
     <View
@@ -73,7 +74,12 @@ export function CommentComposer({
           <Button
             label="Se connecter"
             variant="secondary"
-            onPress={() => router.push("/login")}
+            onPress={() => router.push({
+              pathname: "/login",
+              params: {
+                returnTo: pathname,
+              },
+            })}
           />
         </>
       )}

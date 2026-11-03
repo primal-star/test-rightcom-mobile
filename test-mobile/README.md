@@ -38,10 +38,10 @@ Le nom d’utilisateur et le mot de passe sont requis ; l’adresse e-mail est f
 et doit être valide si elle est renseignée. Le mot de passe est transmis tel que saisi.
 Les erreurs serveur sont affichées et les champs/actions sont désactivés pendant
 la soumission. Après succès, la session est synchronisée et l’application revient
-au fil de publications.
-Au lancement, les visiteurs arrivent sur la connexion ; une session restaurée
-ouvre directement le fil. La lecture sans connexion reste accessible depuis
-le bouton « Continuer sans connexion ». La démonstration des primitives est retirée.
+à la destination demandée (fil, création ou détail d’une publication).
+Au lancement, tous les utilisateurs arrivent sur le fil, avec ou sans compte.
+La barre supérieure affiche « Se connecter » pour un visiteur ou l’icône
+de déconnexion pour un utilisateur connecté. La démonstration des primitives est retirée.
 
 Pour vérifier F1 sur appareil : se connecter avec `alice` / `Password123!`,
 fermer puis relancer l’application, vérifier la session, puis se déconnecter et
@@ -100,7 +100,7 @@ Vérification locale : les données fournies ont retourné trois pages de 10, 10
 5 publications via le SDK, avec auteurs, compteurs et ordre décroissant vérifiés.
 Les scénarios simulés couvrent aussi erreurs, nouvelle tentative, fin de liste,
 actualisation concurrente et démontage. Le rendu et les gestes sur appareil
-restent à vérifier. Les actions J’aime seront ajoutées dans F6.
+restent à vérifier. Les actions J’aime sont disponibles dans F6.
 
 ## Détail d’une publication (F3)
 
@@ -109,6 +109,8 @@ L’écran charge la publication complète et ses commentaires depuis Parse,
 avec les auteurs inclus. Les commentaires sont triés par date décroissante,
 puis par identifiant, et affichés dans une `FlatList`. La lecture se fait par lots
 de 100 afin de ne pas tronquer la liste à la limite par défaut du SDK.
+L’ordre récent d’abord a été demandé pour cette version ; le sujet initial
+indiquait un ordre ancien d’abord.
 
 Le chargement, les erreurs avec nouvelle tentative, l’absence de commentaires
 et une publication introuvable ou inaccessible sont traités. Le bouton natif
@@ -147,7 +149,9 @@ La création/suppression réelle et le dialogue natif restent à vérifier sur a
 Les routes `/feed` et `/publish` sont regroupées dans un navigateur à deux onglets :
 « Fil » et « Publier », avec icônes et couleurs adaptées au thème.
 Le fil reste accessible sans compte. Toucher « Publier » en tant que visiteur
-ouvre la connexion. La déconnexion reste dans la barre supérieure du fil.
+ouvre la connexion puis le formulaire après authentification.
+Les actions de connexion/déconnexion sont dans la barre supérieure, pas dans
+le contenu du fil.
 Le détail d’une publication s’ouvre au-dessus des onglets avec un retour natif.
 
 Le changement d’onglet conserve le brouillon. Publier avec succès ou annuler
@@ -178,6 +182,40 @@ envoyés, passage par le gestionnaire de session, soumission unique, insertion
 sans rechargement, absence de double comptage, ordre des commentaires, remise
 à zéro après succès et conservation du brouillon en cas d’échec.
 L’envoi réel et le comportement du clavier restent à vérifier sur appareil.
+
+## Mentions J’aime (F6)
+
+Le bouton est disponible dans le fil et le détail. L’icône remplie et le libellé
+« Aimé » indiquent une mention personnelle existante. Le bouton affiche une
+attente et bloque les doubles pressions pendant la requête ; les données ne
+changent qu’après confirmation du serveur.
+
+La récupération d’une page interroge `Like` une seule fois pour l’utilisateur
+courant et les publications de cette page, au moyen de `containedIn`.
+Le détail effectue la même vérification pour sa publication.
+Aucune requête `Like` n’est nécessaire pour un visiteur.
+
+Toutes les mutations utilisent `Parse.Cloud.run("toggleLike", { postId })`.
+Le compteur et l’état personnel sont mis à jour avec la réponse serveur.
+Le client ne crée ni ne supprime directement un objet `Like`.
+Une modification dans le détail invalide le fil, qui se synchronise au retour.
+Une erreur conserve l’état précédent et reste affichée près du bouton.
+
+Le fil et le détail sont publics. Publier, commenter et aimer exigent une connexion.
+La suppression exige en plus d’être l’auteur. Un visiteur qui touche J’aime
+est dirigé vers la connexion puis revient à la page concernée,
+sans rejouer automatiquement l’action initiale.
+
+La destination est conservée lors du passage connexion/inscription et limitée
+aux écrans internes autorisés. Sans destination valide, retour au fil.
+« Continuer sans connexion » revient au détail public concerné ou au fil ;
+une demande d’accès à Publier ne permet pas de contourner la connexion.
+
+Vérifications simulées : lecture groupée des mentions personnelles, omission de
+la requête pour les visiteurs, ajout/retrait, compteurs issus du serveur,
+soumission unique, erreurs sans changement visuel des données, mise à jour
+du fil et du détail et redirection vers la connexion. Les appels réels de
+F6 et le rendu sur appareil restent à vérifier.
 
 ## Documentation du projet initial
 

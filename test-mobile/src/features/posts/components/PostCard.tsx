@@ -1,12 +1,15 @@
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/shared/components";
 import { radii, spacing, useTheme } from "@/shared/theme";
-import type { PostSummary } from "../posts.api";
+import type { LikeResult, PostSummary } from "../posts.api";
 import { formatPostDate } from "../utils/formatPostDate";
+import { LikeButton } from "./LikeButton";
 
 type PostCardProps = {
   post: PostSummary;
   full?: boolean;
+  onPress?: () => void;
+  onLikeChange?: (result: LikeResult) => void;
 };
 
 export function PostCard(props: PostCardProps) {
@@ -16,15 +19,8 @@ export function PostCard(props: PostCardProps) {
     ? `${post.body.slice(0, 220).trimEnd()}…`
     : post.body;
 
-  return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: colors.surface,
-        },
-      ]}
-    >
+  const content = (
+    <>
       <AppText
         variant="caption"
         color="muted"
@@ -45,16 +41,56 @@ export function PostCard(props: PostCardProps) {
       >
         {props.full ? post.body : excerpt}
       </AppText>
+    </>
+  );
+
+  return (
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+        },
+      ]}
+    >
+      {props.onPress ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={`Lire « ${post.title} » de ${post.authorUsername}`}
+          onPress={props.onPress}
+          style={({ pressed }) => [
+            styles.content,
+            {
+              opacity: pressed ? 0.75 : 1,
+            },
+          ]}
+        >
+          {content}
+        </Pressable>
+      ) : (
+        <View
+          style={styles.content}
+        >
+          {content}
+        </View>
+      )}
 
       <View
         style={styles.counters}
       >
-        <AppText
-          variant="caption"
-          color="muted"
-        >
-          {post.likesCount} {post.likesCount > 1 ? "mentions J’aime" : "mention J’aime"}
-        </AppText>
+        {props.onLikeChange ? (
+          <LikeButton
+            post={post}
+            onChange={props.onLikeChange}
+          />
+        ) : (
+          <AppText
+            variant="caption"
+            color="muted"
+          >
+            {post.likesCount} {post.likesCount > 1 ? "mentions J’aime" : "mention J’aime"}
+          </AppText>
+        )}
 
         <AppText
           variant="caption"
@@ -73,6 +109,9 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     gap: spacing.sm,
   },
+  content: {
+    gap: spacing.sm,
+  },
   title: {
     fontSize: 20,
     lineHeight: 28,
@@ -81,6 +120,7 @@ const styles = StyleSheet.create({
   counters: {
     flexDirection: "row",
     flexWrap: "wrap",
+    alignItems: "center",
     gap: spacing.md,
     marginTop: spacing.sm,
   },

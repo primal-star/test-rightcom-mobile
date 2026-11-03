@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Parse } from "@/shared/lib/parse";
 import { useSession } from "@/features/auth/hooks/useSession";
-import { fetchPostDetail, type PostComment, type PostSummary } from "../posts.api";
+import { fetchPostDetail, type LikeResult, type PostComment, type PostSummary } from "../posts.api";
 
 type DetailState = {
+  userId: string | null;
   postId: string;
   post: PostSummary | null;
   comments: PostComment[];
@@ -13,8 +14,13 @@ type DetailState = {
 };
 
 export function usePostDetail(postId: string) {
-  const withSession = useSession().withSession;
+  const {
+    user,
+    withSession,
+  } = useSession();
+  const userId = user?.id ?? null;
   const [state, setState] = useState<DetailState>({
+    userId,
     postId,
     post: null,
     comments: [],
@@ -33,10 +39,11 @@ export function usePostDetail(postId: string) {
         throw new Error("L’identifiant de la publication est manquant.");
       }
 
-      const result = await withSession(() => fetchPostDetail(postId));
+      const result = await withSession(() => fetchPostDetail(postId, user));
 
       if (version.current.value === requestVersion) {
         setState({
+          userId,
           postId,
           ...result,
           loading: false,
@@ -50,6 +57,7 @@ export function usePostDetail(postId: string) {
           && cause.code === Parse.Error.OBJECT_NOT_FOUND;
 
         setState({
+          userId,
           postId,
           post: null,
           comments: [],
@@ -67,7 +75,7 @@ export function usePostDetail(postId: string) {
         pending.current = false;
       }
     }
-  }, [postId, withSession]);
+  }, [postId, user, userId, withSession]);
 
   useEffect(() => {
     const currentVersion = version.current;
@@ -123,10 +131,28 @@ export function usePostDetail(postId: string) {
     });
   }
 
+  function updateLike(result: LikeResult) {
+    setState((previous) => {
+      if (previous.post?.id !== postId || previous.userId !== userId) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        post: {
+          ...previous.post,
+          likedByMe: result.liked,
+          likesCount: result.likesCount,
+        },
+      };
+    });
+  }
+
   return {
     ...state,
-    loading: state.postId !== postId || state.loading,
+    loading: state.postId !== postId || state.userId !== userId || state.loading,
     retry,
     addComment,
+    updateLike,
   };
 }

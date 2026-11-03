@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { AppText, Button, RequestState, Screen } from "@/shared/components";
+import { FlatList, StyleSheet, View } from "react-native";
+import { AppText, RequestState, Screen } from "@/shared/components";
 import { spacing } from "@/shared/theme";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { PostCard } from "@/features/posts/components/PostCard";
@@ -39,14 +39,6 @@ export default function Feed() {
         </AppText>
       )}
 
-      {!user && (
-        <Button
-          label="Se connecter"
-          variant="secondary"
-          onPress={() => router.replace("/login")}
-        />
-      )}
-
     </View>
   );
 
@@ -58,25 +50,16 @@ export default function Feed() {
         data={feed.posts}
         keyExtractor={(post) => post.id}
         renderItem={({ item }) => (
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={`Lire « ${item.title} » de ${item.authorUsername}`}
+          <PostCard
+            post={item}
+            onLikeChange={(result) => feed.updateLike(item.id, result)}
             onPress={() => router.push({
               pathname: "/posts/[postId]",
               params: {
                 postId: item.id,
               },
             })}
-            style={({ pressed }) => [
-              {
-                opacity: pressed ? 0.75 : 1,
-              },
-            ]}
-          >
-            <PostCard
-              post={item}
-            />
-          </Pressable>
+          />
         )}
         ListHeaderComponent={header}
         ListEmptyComponent={

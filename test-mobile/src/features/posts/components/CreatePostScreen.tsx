@@ -12,7 +12,12 @@ export function CreatePostScreen() {
   if (!user) {
     return (
       <Redirect
-        href="/login"
+        href={{
+          pathname: "/login",
+          params: {
+            returnTo: "/publish",
+          },
+        }}
       />
     );
   }

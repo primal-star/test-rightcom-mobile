@@ -81,6 +81,7 @@ export default function PostDetail() {
               <PostCard
                 post={detail.post}
                 full
+                onLikeChange={detail.updateLike}
               />
 
               {deletion.canDelete && (

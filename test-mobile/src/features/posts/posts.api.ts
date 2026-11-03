@@ -10,7 +10,13 @@ export type PostSummary = {
   authorId: string | null;
   createdAt: Date;
   likesCount: number;
+  likedByMe: boolean;
   commentsCount: number;
+};
+
+export type LikeResult = {
+  liked: boolean;
+  likesCount: number;
 };
 
 export type PostComment = {
@@ -20,7 +26,7 @@ export type PostComment = {
   createdAt: Date;
 };
 
-function toPostSummary(post: Parse.Object): PostSummary {
+function toPostSummary(post: Parse.Object, likedByMe = false): PostSummary {
   return {
     id: post.id!,
     title: post.get("title"),
@@ -29,8 +35,31 @@ function toPostSummary(post: Parse.Object): PostSummary {
     authorId: post.get("author")?.id ?? null,
     createdAt: post.createdAt!,
     likesCount: post.get("likesCount") ?? 0,
+    likedByMe,
     commentsCount: post.get("commentsCount") ?? 0,
   };
+}
+
+async function getLikedPostIds(posts: Parse.Object[], user: Parse.User | null) {
+  if (!user || posts.length === 0) {
+    return new Set<string>();
+  }
+
+  const query = new Parse.Query("Like");
+
+  query.equalTo("user", user);
+  query.containedIn("post", posts);
+  query.limit(posts.length);
+
+  const likes = await query.find();
+
+  return new Set<string>(likes.map((like) => like.get("post").id));
+}
+
+export async function togglePostLike(postId: string): Promise<LikeResult> {
+  return Parse.Cloud.run("toggleLike", {
+    postId,
+  });
 }
 
 export async function createPost(values: {
@@ -75,7 +104,10 @@ export async function createComment(
   };
 }
 
-export async function fetchPostsPage(offset: number): Promise<PostSummary[]> {
+export async function fetchPostsPage(
+  offset: number,
+  user: Parse.User | null = null,
+): Promise<PostSummary[]> {
   const query = new Parse.Query("Post");
 
   query.include("author");
@@ -85,16 +117,18 @@ export async function fetchPostsPage(offset: number): Promise<PostSummary[]> {
   query.limit(POSTS_PAGE_SIZE);
 
   const posts = await query.find();
+  const likedIds = await getLikedPostIds(posts, user);
 
-  return posts.map(toPostSummary);
+  return posts.map((post) => toPostSummary(post, likedIds.has(post.id!)));
 }
 
-export async function fetchPostDetail(postId: string) {
+export async function fetchPostDetail(postId: string, user: Parse.User | null = null) {
   const query = new Parse.Query("Post");
 
   query.include("author");
 
   const post = await query.get(postId);
+  const likedIds = await getLikedPostIds([post], user);
   const comments: PostComment[] = [];
   const pageSize = 100;
   let offset = 0;
@@ -127,7 +161,7 @@ export async function fetchPostDetail(postId: string) {
   }
 
   return {
-    post: toPostSummary(post),
+    post: toPostSummary(post, likedIds.has(post.id!)),
     comments,
   };
 }

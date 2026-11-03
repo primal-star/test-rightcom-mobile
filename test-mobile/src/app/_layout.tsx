@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/shared/theme";
 import { SessionProvider } from "@/features/auth/session";
+import { SessionHeaderAction } from "@/features/auth/components/SessionHeaderAction";
 
 export default function RootLayout() {
   const {
@@ -23,6 +24,7 @@ export default function RootLayout() {
               backgroundColor: colors.background,
             },
             headerTintColor: colors.text,
+            headerRight: () => <SessionHeaderAction />,
             contentStyle: {
               backgroundColor: colors.background,
             },

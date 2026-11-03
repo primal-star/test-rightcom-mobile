@@ -1,6 +1,6 @@
 import { Tabs, router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { LogoutButton } from "@/features/auth/components/LogoutButton";
+import { SessionHeaderAction } from "@/features/auth/components/SessionHeaderAction";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { useTheme } from "@/shared/theme";
 
@@ -33,7 +33,7 @@ export default function TabsLayout() {
         options={{
           title: "Publications",
           tabBarLabel: "Fil",
-          headerRight: () => user ? <LogoutButton /> : null,
+          headerRight: () => <SessionHeaderAction />,
           tabBarIcon: ({
             color,
             size,
@@ -77,7 +77,12 @@ export default function TabsLayout() {
           tabPress: (event) => {
             if (!user) {
               event.preventDefault();
-              router.push("/login");
+              router.push({
+                pathname: "/login",
+                params: {
+                  returnTo: "/publish",
+                },
+              });
             }
           },
         }}
